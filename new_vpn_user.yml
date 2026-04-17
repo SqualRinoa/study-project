@@ -16,7 +16,7 @@
       command: ./easyrsa sign-req client "{{ user }}"
       responses:
               'Confirm request details:': 'yes'
-              'Enter pass phrase for /etc/openvpn/fb_server/pki/private/ca.key:': 'REptlttDJ76'
+              'Enter pass phrase for /etc/openvpn/fb_server/pki/private/ca.key:': 'pass'
     args:
        chdir: /etc/openvpn/fb_server
        creates: /etc/openvpn/fb_server/pki/issued/"{{ user }}".crt"

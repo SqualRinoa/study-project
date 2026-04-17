@@ -1,0 +1,44 @@
+---
+- name: Openvpn create key user
+  hosts: fb
+  become: yes
+
+  tasks:
+#Создаем сертификат
+  - name: Create the keys
+    command: ./easyrsa --batch="{{ user }}" gen-req "{{ user }}" nopass
+    args:
+      chdir: /etc/openvpn/fb_server
+      creates: /etc/openvpn/fb_server/pki/private/"{{ user }}".key"
+#Подписываем сертификат
+  - name: Sign the client request
+    expect:
+      command: ./easyrsa sign-req client "{{ user }}"
+      responses:
+              'Confirm request details:': 'yes'
+              'Enter pass phrase for /etc/openvpn/fb_server/pki/private/ca.key:': 'REptlttDJ76'
+    args:
+       chdir: /etc/openvpn/fb_server
+       creates: /etc/openvpn/fb_server/pki/issued/"{{ user }}".crt"
+#Копируем серты в отдельную папку
+  - name: Copy
+    shell: '{{ item }}'
+    with_list:
+       - cp /etc/openvpn/fb_server/pki/issued/"{{ user }}".crt /etc/openvpn/fb_server/clients
+       - cp /etc/openvpn/fb_server/pki/private/"{{ user }}".key /etc/openvpn/fb_server/clients
+
+  - name: Copy localhost
+    expect:
+       command: scp /etc/openvpn/fb_server/clients/"{{ user }}".crt squal@IP:/home/squal/VPN/keys/
+       responses:
+           "Enter passphrase for key '/root/.ssh/id_rsa'": ""
+           "squal@IP's password": "pass"
+       echo: yes
+
+  - name: Copy localhost
+    expect:
+       command: scp /etc/openvpn/fb_server/clients/"{{ user }}".key squal@IP:/home/squal/VPN/keys/
+       responses:
+           "Enter passphrase for key '/root/.ssh/id_rsa'": ""
+           "squal@IP's password": "pass"
+       echo: yes
